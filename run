@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+if [ -z {$JUDGE0_VERSION+x} ]; then
+	source ~/.bashrc 1> /dev/null 2> /dev/null
+else
+	source /conda/init 1> /dev/null 2> /dev/null
+fi
+conda activate paralg1 
+python3 energyscheduling.py

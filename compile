@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+mamba create -n paralg1 --file requirements.txt
