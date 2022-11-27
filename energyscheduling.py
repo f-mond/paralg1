@@ -55,6 +55,8 @@ def build_minimal(inst,filename):
     print(priority)
     scheduling = {}
     cpu_busy = {}
+    for i in range(1,M+1):
+        cpu_busy[i]=0
     current_process=1
     scheduled = [*range(1,N+1)]
     for i in range(current_max-1,-1,-1):
@@ -79,6 +81,8 @@ def build_minimal(inst,filename):
                 scheduling[j+1] = [j+1, current_process, inst.get('S'), start_time, start_time+runtime]
                 cpu_busy[current_process] = start_time+runtime
                 #print("process trying to be removed from free: " + str(current_process))
+                #print(free)
+                #print(current_process)
                 free.remove(current_process)
                 #print(free)
                 #print(scheduled)
@@ -91,7 +95,16 @@ def build_minimal(inst,filename):
                 #current_process = (current_process)%M+1
                 if not free:
                     free=[*range(1,M+1)]
-                current_process = random.choice(free)
+                current_process=random.choice(free)
+                for u in free:
+                    #print('u' + str(u))
+                    if u in cpu_busy:
+                        #print('u')
+                        if(cpu_busy[current_process]>cpu_busy[u]):
+                            current_process = u
+                            #print('u: '+str(u))
+                #print(free)
+                #current_process = random.choice(free)
         #print(scheduling)
         #print("\n\n")
         #second path, prio 0
@@ -104,10 +117,11 @@ def build_minimal(inst,filename):
                 #print('break')
                 break
             if len(free)==1:
-                current = free_to_schedule[free_to_schedule_work.index(min(free_to_schedule_work))]
+                #current = free_to_schedule[free_to_schedule_work.index(min(free_to_schedule_work))]
+                break
                 #print('len=1 task '+str(current))
             else:
-                current = random.choice(free_to_schedule)
+                current = free_to_schedule[free_to_schedule_work.index(max(free_to_schedule_work))]
                 #print('selected '+str(current))
             current_process = i
             #print('selected cpu '+str(current_process))
@@ -155,7 +169,7 @@ def build_minimal(inst,filename):
     
 
 def main():
-    filename = "instances/student_instance_5"
+    filename = "instances/student_instance_1"
     inst = read_instance(filename+'.dat')
     #print(inst)
     build_minimal(inst, filename)
