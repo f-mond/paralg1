@@ -22,7 +22,7 @@ def simulated_annealing(inst, start_time):
         #print('ran')
         N, new_makespan, new_energy, new_scheduling = build_minimal(inst, new_array_of_power_states)
         #print(new_makespan)
-        if(new_energy < energy ) and new_makespan < inst.get('deadline'):
+        if((new_energy < energy ) or random.betavariate(4,1)<(start_time - time.time())/10) and new_makespan < inst.get('deadline'):
             #print('better schedule found')
             scheduling = new_scheduling
             energy = new_energy
@@ -249,7 +249,7 @@ def read_instance(inputfile=None):
     return instance
 
 def main():
-    start_time = time.time()+25
+    start_time = time.time()+27
     inst = read_instance()
     simulated_annealing(inst, start_time)
     #build_minimal(inst)
