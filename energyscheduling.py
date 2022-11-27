@@ -3,9 +3,43 @@ import numpy as np
 import random
 import sys
 from optparse import OptionParser
+import time
+
+def simulated_annealing(inst, start_time):
+    array_of_power_states = [1*inst.get('S')]*inst.get('N')
+    #print(array_of_power_states)
+    N, makespan, energy, scheduling = build_minimal(inst, array_of_power_states)
+    #print('energy: ' + str(energy))
+    while True:
+        if(time.time()>start_time):
+            break
+        modification_array = (np.random.randint(-1,1,inst.get('N')))
+        new_array_of_power_states = modification_array + array_of_power_states
+        #array_of_power_states = array_of_power_states%(inst.get('S')+1)
+        new_array_of_power_states = [ x if x>1 else 2 for x in new_array_of_power_states]
+        new_array_of_power_states = [ x if x<=inst.get('S') else inst.get('S') for x in new_array_of_power_states]
+        #print(new_array_of_power_states)
+        #print('ran')
+        N, new_makespan, new_energy, new_scheduling = build_minimal(inst, new_array_of_power_states)
+        #print(new_makespan)
+        if(new_energy < energy ) and new_makespan < inst.get('deadline'):
+            #print('better schedule found')
+            scheduling = new_scheduling
+            energy = new_energy
+            array_of_power_states = new_array_of_power_states
+            makespan = new_makespan
+    #every one of the power states gets assigned a random number
+    #state = energy, array_of_power_states
+    #search neighbour, build new power states, check if valid makespan, compare energies: if better, take new state, if not, choose new state randomly, with likelyhood of jump higher at the start
+    print(str(N))
+    print(str(makespan))
+    print(str(energy))
+    for i in range(1,N+1):
+        print(str(i) + ' '+ str(scheduling.get(i)[1]) + ' ' + str(scheduling.get(i)[2])+ ' '+ str(scheduling.get(i)[3]) + ' ' + str(scheduling.get(i)[4]))
 
 
-def build_minimal(inst):
+
+def build_minimal(inst,power_states):
     N=inst.get('N')
     limit = inst.get("deadline")
     M = inst.get("M")
@@ -67,8 +101,8 @@ def build_minimal(inst):
 
                 if current_process in cpu_busy:
                     start_time = max(cpu_busy.get(current_process),start_time)
-                runtime = inst.get('work')[j]/inst.get('freq_list')[inst.get('S')-1]
-                scheduling[j+1] = [j+1, current_process, inst.get('S'), start_time, start_time+runtime]
+                runtime = inst.get('work')[j]/inst.get('freq_list')[power_states[j]-1]
+                scheduling[j+1] = [j+1, current_process, power_states[j], start_time, start_time+runtime]
                 cpu_busy[current_process] = start_time+runtime
                 free.remove(current_process)
                 scheduled.remove(j+1)
@@ -101,8 +135,8 @@ def build_minimal(inst):
             else:
                 start_time=0
             
-            runtime = inst.get('work')[current-1]/inst.get('freq_list')[inst.get('S')-1]
-            scheduling[current] = [current, current_process, inst.get('S'), start_time, start_time+runtime]
+            runtime = inst.get('work')[current-1]/inst.get('freq_list')[power_states[current-1]-1]
+            scheduling[current] = [current, current_process, power_states[current-1], start_time, start_time+runtime]
             cpu_busy[current_process] = start_time+runtime
             free.remove(current_process)
             scheduled.remove((current))
@@ -125,12 +159,9 @@ def build_minimal(inst):
         idletime+=scheduling.get(i)[4]-scheduling.get(i)[3]
     idletime = makespan*M-idletime
     energy+=idletime*inst.get('power_list')[0]
+    return N, makespan, energy, scheduling
 
-    print(str(N))
-    print(str(makespan))
-    print(str(energy))
-    for i in range(1,N+1):
-        print(str(i) + ' '+ str(scheduling.get(i)[1]) + ' ' + str(scheduling.get(i)[2])+ ' '+ str(scheduling.get(i)[3]) + ' ' + str(scheduling.get(i)[4]))
+    
 
 def read_and_check_one_elem_line(f, expected_element_type, error_message):
     try:
@@ -218,8 +249,10 @@ def read_instance(inputfile=None):
     return instance
 
 def main():
+    start_time = time.time()+25
     inst = read_instance()
-    build_minimal(inst)
+    simulated_annealing(inst, start_time)
+    #build_minimal(inst)
 
 if __name__ == "__main__":
     main()
