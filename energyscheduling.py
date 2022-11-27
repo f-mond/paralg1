@@ -13,7 +13,7 @@ def build_minimal(inst,filename):
     # check if those with priority=1 are in the keys of predecessor, if so take their values and set priority=2
     # loop through until there are no more keys found
     # have priority list, higher value higher priority
-    #print(inst)
+    #print(N)
     free_to_schedule=[]
     free_to_schedule_work=[]
     for i in range(1,N+1):
@@ -35,8 +35,11 @@ def build_minimal(inst,filename):
     for i in free_to_schedule:
         #print(i)
         free_to_schedule_work.append(inst.get('work')[i-1])
-    print(len(free_to_schedule))
+    #print((free_to_schedule))
     #print(free_to_schedule_work)
+    #print(free_to_schedule_work[0]/inst.get('freq_list')[inst.get('S')-1])
+    #print(inst.get('work'))
+    
 
     
     while(flag):
@@ -48,16 +51,16 @@ def build_minimal(inst,filename):
                         priority[j-1]=current_max+1
                         flag=True
         current_max=current_max+1
-    #print(priority)
+    print(priority)
     scheduling = {}
     cpu_busy = {}
     current_process=1
-    for i in range(current_max-1,0,-1):
+    scheduled = [*range(1,N+1)]
+    for i in range(current_max-1,-1,-1):
         free=[*range(1,M+1)]
-        scheduled=[]
         #print("Priority: " + str(i))
         for j in range(N):
-            if(priority[j] == i):
+            if(priority[j] == i) and j+1 in scheduled:
                 start_time = 0
                 #print(current_process)
                 if j+1 in preds:
@@ -77,7 +80,13 @@ def build_minimal(inst,filename):
                 #print("process trying to be removed from free: " + str(current_process))
                 free.remove(current_process)
                 #print(free)
-                scheduled.append(current_process)
+                #print(scheduled)
+                #print(j+1)
+                #print(scheduling[j+1])
+                scheduled.remove(j+1)
+                if j+1 in free_to_schedule:
+                    free_to_schedule_work.pop(free_to_schedule.index(j+1))
+                    free_to_schedule.remove(j+1)
                 #current_process = (current_process)%M+1
                 if not free:
                     free=[*range(1,M+1)]
@@ -88,35 +97,38 @@ def build_minimal(inst,filename):
         #print(free)
         #print(cpu_busy)
         for i in free:
+            #print(i)
+            #print(free)
             if not free_to_schedule:
-                print('break')
+                #print('break')
                 break
             if len(free)==1:
-                print('len=1')
                 current = free_to_schedule[free_to_schedule_work.index(min(free_to_schedule_work))]
+                #print('len=1 task '+str(current))
             else:
                 current = random.choice(free_to_schedule)
-            current_process = random.choice(free)
+                #print('selected '+str(current))
+            current_process = i
+            #print('selected cpu '+str(current_process))
             if current_process in cpu_busy:
                 start_time=cpu_busy.get(current_process)
             else:
                 start_time=0
             #print(start_time)
-            runtime = inst.get('work')[current]/inst.get('freq_list')[inst.get('S')-1]
+            runtime = inst.get('work')[current-1]/inst.get('freq_list')[inst.get('S')-1]
             #print('scheduling ' + str(current)+' from '+str(start_time)+' to ' + str(start_time+runtime))
             scheduling[current] = [current, current_process, inst.get('S'), start_time, start_time+runtime]
             cpu_busy[current_process] = start_time+runtime
             free.remove(current_process)
-            scheduled.append(current_process)
+            scheduled.remove((current))
             free_to_schedule_work.pop(free_to_schedule.index(current))
             free_to_schedule.remove(current)
-            print(free)
+            #print(free)
             
         if not free:
             free=[*range(1,M+1)]
 
-                
-
+    #print(scheduled)
     makespan = 0
     for i in range(1,M+1):
         if(i in cpu_busy):
@@ -142,7 +154,7 @@ def build_minimal(inst,filename):
     
 
 def main():
-    filename = "instances/student_instance_3"
+    filename = "instances/student_instance_5"
     inst = read_instance(filename+'.dat')
     #print(inst)
     build_minimal(inst, filename)
