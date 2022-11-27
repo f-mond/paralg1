@@ -13,13 +13,14 @@ def build_minimal(inst,filename):
     # check if those with priority=1 are in the keys of predecessor, if so take their values and set priority=2
     # loop through until there are no more keys found
     # have priority list, higher value higher priority
-    #print(N)
+    print(preds)
+    print(N)
     free_to_schedule=[]
     free_to_schedule_work=[]
     for i in range(1,N+1):
         free_to_schedule.append(i)
         #free_to_schedule_work.append(inst.get('work')[i])
-    for i in range(N):
+    for i in range(1,N+1):
         if i in preds:
             if priority[i-1]==0:
                 priority[i-1] = 1
@@ -128,7 +129,7 @@ def build_minimal(inst,filename):
         if not free:
             free=[*range(1,M+1)]
 
-    #print(scheduled)
+    #print(scheduling)
     makespan = 0
     for i in range(1,M+1):
         if(i in cpu_busy):
