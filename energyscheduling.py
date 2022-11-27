@@ -1,6 +1,9 @@
 from parse_instance import read_instance
 import numpy as np
 import random
+import sys
+from optparse import OptionParser
+
 
 def build_minimal(inst,filename):
     N=inst.get('N')
@@ -13,8 +16,8 @@ def build_minimal(inst,filename):
     # check if those with priority=1 are in the keys of predecessor, if so take their values and set priority=2
     # loop through until there are no more keys found
     # have priority list, higher value higher priority
-    print(preds)
-    print(N)
+    #print(preds)
+    #print(N)
     free_to_schedule=[]
     free_to_schedule_work=[]
     for i in range(1,N+1):
@@ -52,7 +55,7 @@ def build_minimal(inst,filename):
                         priority[j-1]=current_max+1
                         flag=True
         current_max=current_max+1
-    print(priority)
+    #print(priority)
     scheduling = {}
     cpu_busy = {}
     for i in range(1,M+1):
@@ -151,7 +154,7 @@ def build_minimal(inst,filename):
                 makespan = cpu_busy.get(i)
     energy = 0
     idletime = 0
-    print(scheduling)
+    #print(scheduling)
     for i in range(1,N+1):
         energy+= inst.get('power_list')[scheduling.get(i)[2]-1] * (scheduling.get(i)[4]-scheduling.get(i)[3])
         idletime+=scheduling.get(i)[4]-scheduling.get(i)[3]
@@ -159,21 +162,107 @@ def build_minimal(inst,filename):
     energy+=idletime*inst.get('power_list')[0]
     #print(preds)
     #print(priority)
-    print(makespan)
-    with open(filename+'_output.dat', 'w') as outfile:
-        outfile.write(str(N)+'\n')
-        outfile.write(str(makespan)+'\n')
-        outfile.write(str(energy)+'\n')
-        for i in range(1,N+1):
-            outfile.write(str(i) + ' '+ str(scheduling.get(i)[1]) + ' ' + str(scheduling.get(i)[2])+ ' '+ str(scheduling.get(i)[3]) + ' ' + str(scheduling.get(i)[4])+'\n')
-    
+    #print(makespan)
+    #with open(filename+'_output.dat', 'w') as outfile:
+    print(str(N))
+    print(str(makespan))
+    print(str(energy))
+    for i in range(1,N+1):
+        print(str(i) + ' '+ str(scheduling.get(i)[1]) + ' ' + str(scheduling.get(i)[2])+ ' '+ str(scheduling.get(i)[3]) + ' ' + str(scheduling.get(i)[4]))
+
+def read_and_check_one_elem_line(f, expected_element_type, error_message):
+    try:
+        res = expected_element_type(f.readline())
+    except ValueError:
+        print(error_message, file=sys.stderr)
+        exit(1)
+    if res <= 0:
+        print(error_message, file=sys.stderr)
+        exit(1)
+    return res
+
+def read_and_check_list(f, expected_length, expected_element_type, error_message):
+    s = f.readline()
+    res_list = s.split(" ")
+    try:
+        res_list = list(map(expected_element_type, res_list))
+    except ValueError:
+        print(error_message, file=sys.stderr)
+        exit(1)
+    if len(res_list) != expected_length:
+        print(error_message, file=sys.stderr)
+        exit(1)
+    return res_list
+
+
+def read_instance(inputfile=None):
+    instance = {}
+
+    if inputfile is not None:
+        if not os.path.isfile(inputfile):
+            print("ERROR: Cannot open file %s" % inputfile, file=sys.stderr)
+            exit(1)
+        f = open(inputfile, 'r')
+    else:
+        f = sys.stdin
+
+
+    # number of tasks
+    instance["N"] = read_and_check_one_elem_line(f, int,
+                                    "ERROR: Number of tasks not correctly specified")
+
+    # work in operations (e.g., FLOPS)
+    instance["work"] = read_and_check_list(f, instance["N"], float,
+                                    "ERROR: work list not correctly specified")
+
+    # number of machines
+    instance["M"] = read_and_check_one_elem_line(f, int,
+                                    "ERROR: Number of machines not correctly specified")
+
+    # number of states
+    instance["S"] = read_and_check_one_elem_line(f, int,
+                                    "ERROR: Number of states not correctly specified")
+
+    # list of states (frequencies)
+    instance["freq_list"] = read_and_check_list(f, instance["S"], float,
+                                    "ERROR: States list not correctly specified")
+
+    # list of power values for each state
+    instance["power_list"] = read_and_check_list(f, instance["S"], float,
+                                    "ERROR: Power values list not correctly specified")
+
+    instance["predecessors"] = {}
+    for j in range(1, instance["N"] + 1):
+        pred_list = f.readline().split(" ")
+        try:
+            pred_list = list(map(int, pred_list))
+        except ValueError:
+            print("ERROR: Predecessor list not correctly specified for task %d" % (j), file=sys.stderr)
+            exit(1)
+        if len(pred_list) == 0:
+            print("ERROR: Predecessor list not correctly specified for task %d" % (j), file=sys.stderr)
+            exit(1)
+        if len(pred_list) == 1 and pred_list[0] == 0:
+            # no predecessors for current task
+            continue
+        instance["predecessors"][j] = pred_list
+
+    instance["deadline"] = read_and_check_one_elem_line(f, float,
+                            "ERROR: Deadline not correctly specified")
+
+    if f != sys.stdin:
+        f.close()
+
+    return instance
 
 def main():
-    filename = "instances/student_instance_1"
-    inst = read_instance(filename+'.dat')
+    #print('test')
+    inst = read_instance()
+    filename='test.txt'
+
+
     #print(inst)
     build_minimal(inst, filename)
-
 
 if __name__ == "__main__":
     main()
